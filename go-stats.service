@@ -1,0 +1,41 @@
+# ==============================================================================
+# go-stats · Systemd Service Unit
+# ==============================================================================
+# Installs to: /etc/systemd/system/go-stats.service
+# Author: davidalvarezp (dap) <mail@davidalvarezp.com>
+# Website: https://davidalvarezp.com/go-stats
+# Repository: https://github.com/davidalvarezp/go-stats
+# ==============================================================================
+
+[Unit]
+Description=go-stats - Lightweight Native Linux System Monitor
+Documentation=https://davidalvarezp.com/go-stats https://github.com/davidalvarezp/go-stats
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/local/bin
+ExecStart=/usr/local/bin/go-stats -port 10590 -daemon
+Restart=always
+RestartSec=3
+KillMode=process
+
+# Logging standard
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=go-stats
+
+# Resource limits & process safety
+LimitNOFILE=65535
+TimeoutStopSec=10
+
+# Security sandboxing
+ProtectSystem=full
+ProtectHome=read-only
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

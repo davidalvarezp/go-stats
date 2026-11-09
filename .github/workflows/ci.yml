@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go-version: [ '1.20', '1.21', '1.22', '1.23', '1.24' ]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          check-latest: true
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run unit tests
+        run: CGO_ENABLED=0 go test -v -race ./...
+
+      - name: Build binary (linux/amd64)
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.Version=dev" -o bin/go-stats-amd64 cmd/go-stats/main.go
+
+      - name: Build binary (linux/arm64)
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.Version=dev" -o bin/go-stats-arm64 cmd/go-stats/main.go
+
+      - name: Validate binary execution
+        run: ./bin/go-stats-amd64 -version
